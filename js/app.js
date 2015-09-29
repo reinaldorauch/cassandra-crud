@@ -5,20 +5,57 @@
    * Initializing the app
    * @type {App}
    */
-  var app = angular.module('cassandraCrud', []);
+  var app = angular.module('cassandraCrud', ['ngResource']);
 
   /**
    * dataFactory
    */
-  app.service('dataFactory', dataFactory);
+  app.factory('dataFactory', dataFactory);
 
-  dataFactory.$inject = ['$resource'];
+  dataFactory.$inject = ['$resource', '$q', '$rootScope'];
 
-  function dataFactory ($resource) {
-    console.log('dataFactory');
+  function dataFactory ($resource, $q, $rootScope) {
+    var People = $resource('http://localhost:60000/people/:id');
+
     var service = {
-
+      listPeople: listPeople,
+      getPerson: getPerson,
+      savePerson: savePerson,
+      removePerson: removePerson
     };
+
+    function listPeople () {
+      var def = $q.defer();
+
+      var ppls = People.query(function () {
+        def.resolve(ppls);
+      });
+
+      return def.promise;
+    }
+
+    function getPerson (id) {
+      var def = $q.defer();
+
+      var person = People.get({id: id}, function () {
+        def.resolve(person);
+      });
+
+      return def.promise;
+    }
+
+    function savePerson (person) {
+      person = new People(person);
+      return person.$save(function () {
+        $rootScope.$emit('update');
+      });
+    }
+
+    function removePerson (id) {
+      return People.remove({id: id}).$promise.then(function () {
+        $rootScope.$emit('update');
+      });
+    }
 
     return service;
   }
@@ -28,28 +65,36 @@
    */
   app.controller('TableController', TableController);
 
-  TableController.$inject = ['dataFactory'];
+  TableController.$inject = ['$rootScope', 'dataFactory'];
 
-  function TableController (dataFactory) {
+  function TableController ($rootScope, dataFactory) {
     var vm = this;
 
-    vm.people = [
-      {
-        id: 1,
-        name: 'Reinaldo A. C. Rauch',
-        city: 'Ponta Grossa, Paraná, Brazil',
-        email: 'reinaldorauch@gmail.com'
-      }
-    ];
-    vm.remove = removePeople;
+    vm.people = [];
+    vm.remove = removePerson;
     vm.edit   = editPeople;
 
-    function removePeople (id) {
-      console.log('Remove', id);
+    init();
+
+    function init() {
+      getPeople();
+
+      $rootScope.$on('update', getPeople);
+    }
+
+    function removePerson (id) {
+      dataFactory.removePerson(id);
     }
 
     function editPeople (id) {
       console.log('Edit', id);
+    }
+
+    function getPeople() {
+      dataFactory.listPeople()
+        .then(function (ppl) {
+          vm.people = ppl;
+        });
     }
 
   }
@@ -59,10 +104,29 @@
    */
   app.controller('FormController', FormController);
 
-  FormController.$inject = [];
+  FormController.$inject = ['$rootScope', 'dataFactory'];
 
-  function FormController () {
+  function FormController ($rootScope, dataFactory) {
     var vm = this;
+
+    vm.person = {};
+
+    vm.save = save;
+
+    init();
+
+    function init() {
+      $rootScope.$on('update', clearForm);
+    }
+
+    function save () {
+      dataFactory.savePerson(vm.person);
+    }
+
+    function clearForm () {
+      vm.person = {};
+    }
+
   }
 
 })();
