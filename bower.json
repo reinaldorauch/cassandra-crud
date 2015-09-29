@@ -1,0 +1,25 @@
+{
+  "name": "cassandra-crud",
+  "version": "0.0.0",
+  "authors": [
+    "Reinaldo A. C. Rauch <reinaldorauch@gmail.com>"
+  ],
+  "description": "",
+  "main": "index.html",
+  "moduleType": [],
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "angularjs#~1.4.6",
+    "bootstrap": "~3.3.5",
+    "angular-resource": "~1.4.6"
+  }
+}
