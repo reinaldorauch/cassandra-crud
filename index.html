@@ -32,7 +32,8 @@
       </div>
       <div ng-controller="TableController as vm" class="row">
         <div class="col-md-12">
-          <p>People listed</p>
+          <h2>People listed</h2>
+          <hr>
           <table class="table">
             <thead>
               <tr>
@@ -66,41 +67,44 @@
       </div>
       <div class="row">
         <div class="col-md-12">
-          <p>Form to insert and update peoples</p>
+          <h2>Form to insert and update peoples</h2>
+          <hr>
         </div>
       </div>
       <div ng-controller="FormController as vm" class="row">
-        <form class="form-horizontal" ng-submit="vm.save()">
-          <div class="form-group">
-            <label for="id" class="control-label col-md-2">Id</label>
-            <div class="col-md-10">
-              <input class="form-control" type="text" name="id" id="id" ng-model="vm.person.id">
+        <div class="col-md-12">
+          <form class="form-horizontal" ng-submit="vm.save()">
+            <div class="form-group">
+              <label for="id" class="control-label col-md-2">Id</label>
+              <div class="col-md-4">
+                <input class="form-control" type="text" name="id" id="id" ng-model="vm.person.id">
+              </div>
             </div>
-          </div>
-          <div class="form-group">
-            <label for="name" class="control-label col-md-2">Name</label>
-            <div class="col-md-10">
-              <input class="form-control" type="text" name="name" id="name" ng-model="vm.person.name">
+            <div class="form-group">
+              <label for="name" class="control-label col-md-2">Name</label>
+              <div class="col-md-4">
+                <input class="form-control" type="text" name="name" id="name" ng-model="vm.person.name">
+              </div>
             </div>
-          </div>
-          <div class="form-group">
-            <label for="email" class="control-label col-md-2">Email</label>
-            <div class="col-md-10">
-              <input class="form-control" type="email" name="email" id="email" ng-model="vm.person.email">
+            <div class="form-group">
+              <label for="email" class="control-label col-md-2">Email</label>
+              <div class="col-md-4">
+                <input class="form-control" type="email" name="email" id="email" ng-model="vm.person.email">
+              </div>
             </div>
-          </div>
-          <div class="form-group">
-            <label for="city" class="control-label col-md-2">City</label>
-            <div class="col-md-10">
-              <input class="form-control" type="text" name="city" id="city" ng-model="vm.person.city">
+            <div class="form-group">
+              <label for="city" class="control-label col-md-2">City</label>
+              <div class="col-md-4">
+                <input class="form-control" type="text" name="city" id="city" ng-model="vm.person.city">
+              </div>
             </div>
-          </div>
-          <div class="form-group">
-            <div class="col-md-10 col-md-offset-2">
-              <button class="btn btn-primary">Salvar</button>
+            <div class="form-group">
+              <div class="col-md-4 col-md-offset-2">
+                <button class="btn btn-primary">Salvar</button>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
     <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
