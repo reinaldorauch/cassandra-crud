@@ -16,6 +16,11 @@
 
   server.use(restify.queryParser());
   server.use(restify.bodyParser());
+  server.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    return next();
+  });
 
   server.get('/', serveGetRoot);
   server.get('/people', serveGetPeople);
@@ -24,8 +29,8 @@
   server.put('/people/:id', servePutPeople);
   server.del('/people/:id', serveDeletePeople);
 
-  server.listen(6000, function () {
-    console.log('Server listening at port 6000');
+  server.listen(60000, function () {
+    console.log('Server listening at port 60000');
   });
 
   client.on('log', function(level, className, message, furtherInfo) {
