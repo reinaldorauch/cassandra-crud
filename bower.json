@@ -19,6 +19,7 @@
   ],
   "dependencies": {
     "angular": "angularjs#~1.4.6",
-    "bootstrap": "~3.3.5"
+    "bootstrap": "~3.3.5",
+    "angular-resource": "~1.4.6"
   }
 }
