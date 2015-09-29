@@ -87,7 +87,7 @@
     }
 
     function editPeople (id) {
-      console.log('Edit', id);
+      $rootScope.$emit('edit', id);
     }
 
     function getPeople() {
@@ -117,6 +117,7 @@
 
     function init() {
       $rootScope.$on('update', clearForm);
+      $rootScope.$on('edit', loadPersonInForm);
     }
 
     function save () {
@@ -125,6 +126,13 @@
 
     function clearForm () {
       vm.person = {};
+    }
+
+    function loadPersonInForm ($event, person) {
+      dataFactory.getPerson(person)
+        .then(function (p) {
+          vm.person = p;
+        });
     }
 
   }
