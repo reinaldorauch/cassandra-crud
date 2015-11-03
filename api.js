@@ -89,12 +89,13 @@
   function servePostPeople (req, res, cb) {
     console.log('Receiving POST query into /people');
     console.log('Params:', req.params);
-    var query = 'INSERT INTO people (id, name, city, email) VALUES (?, ?, ?, ?)';
+    var query = 'INSERT INTO people (id, name, city, email, upd) VALUES (?, ?, ?, ?, ?)';
     var data = [
       req.params.id,
       req.params.name,
       req.params.city,
-      req.params.email
+      req.params.email,
+      req.params.upd || new Date().toISOString()
     ];
     var opts = { prepare: true };
 
@@ -113,11 +114,12 @@
   }
 
   function servePutPeople (req, res, cb) {
-    var query = 'UPDATE people SET name = ?, city = ?, email = ? WHERE id = ?';
+    var query = 'UPDATE people SET name = ?, city = ?, email = ?, upd = ? WHERE id = ?';
     var data = [
       req.params.name,
       req.params.city,
       req.params.email,
+      req.params.upd || new Date().toISOString(),
       req.params.id
     ];
     var opts = { prepare: true };
