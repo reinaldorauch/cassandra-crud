@@ -95,7 +95,7 @@
       req.params.name,
       req.params.city,
       req.params.email,
-      req.params.upd || new Date().toISOString()
+      (req.params.upd || (new Date()).toISOString())
     ];
     var opts = { prepare: true };
 
@@ -119,7 +119,7 @@
       req.params.name,
       req.params.city,
       req.params.email,
-      req.params.upd || new Date().toISOString(),
+      (req.params.upd || (new Date()).toISOString()),
       req.params.id
     ];
     var opts = { prepare: true };
