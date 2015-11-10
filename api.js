@@ -35,7 +35,8 @@
   server.post('/people', servePostPeople);
   server.put('/people/:id', servePutPeople);
   server.del('/people/:id', serveDeletePeople);
-  server.get('/people/updates', serveUpdatesPeople);
+  server.get('/updates', serveUpdatesPeople);
+  server.post('/updates', servePostUpdatesPeople);
 
   server.listen(60000, function () {
     console.log('Server listening at port 60000');
@@ -68,7 +69,7 @@
     return q.ninvoke(client, 'execute', cql, data, { prepare: true })
       .then(q.fcall(function (response) {
         var verb = cql.match(/^(\w+)/)[1];
-        if(verb !== 'SELECT') {
+        if(verb !== 'SELECT' && !/updates/i.test(cql)) {
           return persistUpdate(verb, params.id)
             .then(function () {
               console.log('UHUL');
@@ -165,13 +166,80 @@
   }
 
   function serveUpdatesPeople (req, res, cb) {
-    var query = 'SELECT * FROM people WHERE upd > ?';
-    var data = [moment(req.params.last).toJSON()];
+    var query = 'SELECT * FROM updates WHERE time > ? ALLOW FILTERING';
+    console.log(req.query);
+    var data = [moment(req.query.last).toJSON()];
 
     runCql(query, data)
       .then(function (response) {
         console.log('Being requested for updates');
+        res.send(response.rows);
       })
       .then(cb);
+  }
+
+  function buildCql (verb, args) {
+    var cql, data;
+    switch(verb) {
+      case 'UPDATE':
+        cql = verb + ' people SET name = ?, email = ?, city = ? WHERE id = ?';
+        data = [args.name, args.email, args.city, args.id];
+        break;
+      case 'INSERT':
+        cql = verb + ' INTO people SET id = ?, name = ?, email = ?, city = ?';
+        data = [args.id, args.email, args.city, args.name];
+        break;
+      case 'DELETE':
+        cql = verb + ' FROM people WHERE id = ?';
+        data = [args.id];
+        break;
+      default:
+        throw new Error('Invalid verb: ' + verb);
+    }
+
+    return runCql(cql, data);
+  }
+
+  function insertInLog (diff) {
+    var cql = 'INSERT INTO updates (id, action, changed_id, time) VALUES (?, ?, ?, ?)';
+    var data = [diff.id, diff.action, diff.changed_id, diff.time];
+    return runCql(cql, data)
+      .then(q.fcall(() => diff));
+  }
+
+  function servePostUpdatesPeople (req, res, cb) {
+    var buffer = []; // Buffer de promises
+    var diff = req.params.diff;
+    var data = req.params.rows;
+    var prom;
+
+    console.log('Receiving updates...');
+    console.log(diff, data);
+
+    var sortFunc = function (a, b) {
+      return moment(a.time).diff(moment(b.time));
+    };
+
+    diff.sort(sortFunc);
+
+    for (var i = 0; i < diff.length; i++) {
+      console.log('Iterating...');
+      prom = insertInLog(diff[i])
+        .then(function (diff) {
+          return buildCql(diff.action, data[String(diff.id)]);
+        });
+      buffer.push(prom);
+    }
+
+    q.all(buffer)
+      .then(function () {
+        res.send({ msg: 'All updates where sincronized with success' });
+        return cb();
+      })
+      .catch(function (err) {
+        console.error(err.message);
+        console.log(err.stack);
+        cb();
+      });
   }
 })();
