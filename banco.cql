@@ -14,7 +14,7 @@ CREATE TABLE people (
 );
 
 CREATE TABLE updates (
-    id INT PRIMARY KEY,
+    id TEXT PRIMARY KEY,
     action TEXT,
     changed_id INT,
     time DATE
