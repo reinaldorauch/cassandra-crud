@@ -23,6 +23,7 @@
   "dependencies": {
     "cassandra-driver": "^2.2.1",
     "moment": "^2.10.6",
+    "node-uuid": "^1.4.3",
     "q": "^1.4.1",
     "restify": "^4.0.3"
   }
