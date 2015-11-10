@@ -53,8 +53,7 @@
    */
 
   function runCql(cql, data)   {
-    var opts = {prepare: true};
-    return q.nfinvoke(client, 'execute', cql, data, opts)
+    return q.ninvoke(client, 'execute', cql, data, { prepare: true })
       .catch(function (err) {
         console.error('There was an error on the database: ' + err.message);
         console.log(err.stack);
@@ -75,7 +74,8 @@
     var query = 'SELECT * FROM people';
 
     return runCql(query)
-      .spread(function (response) {
+      .then(function (response) {
+        console.log('Got response from cassandra: ', response);
         res.send(response.rows);
       })
       .then(cb);
@@ -87,7 +87,7 @@
     var data = [req.params.id];
 
     return runCql(query, data)
-      .spread(function (response) {
+      .then(function (response) {
         res.send(response.rows[0]);
       })
       .then(cb);
@@ -106,7 +106,7 @@
     ];
 
     runCql(query, data)
-      .spread(function (response) {
+      .then(function (response) {
         console.log('Data inserted into cluster');
         res.send({ msg: 'Inserted with success' });
       })
@@ -124,7 +124,7 @@
     ];
 
     runCql(query, data)
-      .spread(function (response) {
+      .then(function (response) {
         console.log('Data updated into cluster');
         res.send({ msg: 'updated with success' });
       })
@@ -136,7 +136,7 @@
     var data = [req.params.id];
 
     runCql(query, data)
-      .spread(function (response) {
+      .then(function (response) {
         console.log('Data removed from cluster');
         res.send({ msg: 'removed with success' });
       })
@@ -148,7 +148,7 @@
     var data = [moment(req.params.last).toJSON()];
 
     runCql(query, data)
-      .spread(function (response) {
+      .then(function (response) {
         console.log('Being requested for updates');
       })
       .then(cb);
