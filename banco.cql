@@ -9,5 +9,13 @@ CREATE TABLE people (
     id INT PRIMARY KEY,
     name TEXT,
     city TEXT,
-    email TEXT
+    email TEXT,
+    upd DATE
+);
+
+CREATE TABLE updates (
+    id INT PRIMARY KEY,
+    action TEXT,
+    changed_id INT,
+    time DATE
 );
