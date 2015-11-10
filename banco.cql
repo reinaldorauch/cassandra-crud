@@ -10,12 +10,13 @@ CREATE TABLE people (
     name TEXT,
     city TEXT,
     email TEXT,
-    upd DATE
+    upd TIMESTAMP
 );
 
 CREATE TABLE updates (
-    id TEXT PRIMARY KEY,
+    id TEXT,
     action TEXT,
     changed_id INT,
-    time DATE
+    time TIMESTAMP,
+    PRIMARY KEY(id, time)
 );
