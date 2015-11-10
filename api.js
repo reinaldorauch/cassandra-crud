@@ -1,6 +1,11 @@
 (function() {
   'use strict';
 
+  // COISA DO GOD
+  var q = require('q');
+
+  var moment = require('moment');
+
   var restify = require('restify');
 
   var assert = require('assert');
@@ -28,6 +33,7 @@
   server.post('/people', servePostPeople);
   server.put('/people/:id', servePutPeople);
   server.del('/people/:id', serveDeletePeople);
+  server.get('/people/updates', serveUpdatesPeople);
 
   server.listen(60000, function () {
     console.log('Server listening at port 60000');
@@ -46,6 +52,15 @@
    * Implementation
    */
 
+  function runCql(cql, data)   {
+    var opts = {prepare: true};
+    return q.nfinvoke(client, 'execute', cql, data, opts)
+      .catch(function (err) {
+        console.error('There was an error on the database: ' + err.message);
+        console.log(err.stack);
+      });
+  }
+
   function serveGetRoot (req, res, cb) {
     console.log('Query on the root');
     res.send({
@@ -59,31 +74,23 @@
     console.log('Get query on /people');
     var query = 'SELECT * FROM people';
 
-    return client.execute(query, function (err, response) {
-      assert.ifError(err);
-
-      res.send(response.rows);
-
-      return setImmediate(function () {
-        return cb();
-      });
-    });
+    return runCql(query)
+      .spread(function (response) {
+        res.send(response.rows);
+      })
+      .then(cb);
   }
 
   function serveGetOnePeople (req, res, cb) {
     console.log('Get query on /people');
     var query = 'SELECT * FROM people WHERE id = ?';
     var data = [req.params.id];
-    var opts = {prepare: true};
-    return client.execute(query, data, opts, function (err, response) {
-      assert.ifError(err);
 
-      res.send(response.rows[0]);
-
-      return setImmediate(function () {
-        return cb();
-      });
-    });
+    return runCql(query, data)
+      .spread(function (response) {
+        res.send(response.rows[0]);
+      })
+      .then(cb);
   }
 
   function servePostPeople (req, res, cb) {
@@ -97,20 +104,13 @@
       req.params.email,
       (req.params.upd || (new Date()).toISOString())
     ];
-    var opts = { prepare: true };
 
-    client.execute(query, data, opts, function (err) {
-      assert.ifError(err);
-
-      console.log('Data inserted into cluster');
-      res.send({
-        msg: 'Inserted with success'
-      });
-
-      setImmediate(function () {
-        cb();
-      });
-    });
+    runCql(query, data)
+      .spread(function (response) {
+        console.log('Data inserted into cluster');
+        res.send({ msg: 'Inserted with success' });
+      })
+      .then(cb);
   }
 
   function servePutPeople (req, res, cb) {
@@ -122,37 +122,35 @@
       (req.params.upd || (new Date()).toISOString()),
       req.params.id
     ];
-    var opts = { prepare: true };
 
-    client.execute(query, data, opts, function (err) {
-      assert.ifError(err);
-
-      console.log('Data updated into cluster');
-      res.send({
-        msg: 'updated with success'
-      });
-
-      setImmediate(function () {
-        cb();
-      });
-    });
+    runCql(query, data)
+      .spread(function (response) {
+        console.log('Data updated into cluster');
+        res.send({ msg: 'updated with success' });
+      })
+      .then(cb);
   }
 
   function serveDeletePeople (req, res, cb) {
     var query = 'DELETE FROM people WHERE id = ?';
     var data = [req.params.id];
-    var opts = { prepare: true };
-    client.execute(query, data, opts, function (err) {
-      assert.ifError(err);
 
-      console.log('Data removed from cluster');
-      res.send({
-        msg: 'removed with success'
-      });
+    runCql(query, data)
+      .spread(function (response) {
+        console.log('Data removed from cluster');
+        res.send({ msg: 'removed with success' });
+      })
+      .then(cb);
+  }
 
-      setImmediate(function () {
-        cb();
-      });
-    });
+  function serveUpdatesPeople (req, res, cb) {
+    var query = 'SELECT * FROM people WHERE upd > ?';
+    var data = [moment(req.params.last).toJSON()];
+
+    runCql(query, data)
+      .spread(function (response) {
+        console.log('Being requested for updates');
+      })
+      .then(cb);
   }
 })();
