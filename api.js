@@ -4,6 +4,8 @@
   // COISA DO GOD
   var q = require('q');
 
+  var uuid = require('node-uuid');
+
   var moment = require('moment');
 
   var restify = require('restify');
@@ -39,9 +41,9 @@
     console.log('Server listening at port 60000');
   });
 
-  client.on('log', function(level, className, message, furtherInfo) {
+  /*client.on('log', function(level, className, message, furtherInfo) {
     console.log('log event: %s -- %s', level, message);
-  });
+  });*/
 
   client.on('error', function (err) {
     console.error('Error on connecting to cassandra: ', err.message);
@@ -52,8 +54,30 @@
    * Implementation
    */
 
-  function runCql(cql, data)   {
+  function persistUpdate (verb, id) {
+    var cql = 'INSERT INTO updates (id, action, changed_id, time) VALUES (?, ?, ?, ?)';
+    var data = [uuid.v4(), verb, id, moment().toJSON()];
     return q.ninvoke(client, 'execute', cql, data, { prepare: true })
+      .catch(function (err) {
+        console.error(err.message);
+        console.log(err.stack);
+      });
+  }
+
+  function runCql(cql, data, params)   {
+    return q.ninvoke(client, 'execute', cql, data, { prepare: true })
+      .then(q.fcall(function (response) {
+        var verb = cql.match(/^(\w+)/)[1];
+        if(verb !== 'SELECT') {
+          return persistUpdate(verb, params.id)
+            .then(function () {
+              console.log('UHUL');
+              return response;
+            });
+        } else {
+          return response;
+        }
+      }))
       .catch(function (err) {
         console.error('There was an error on the database: ' + err.message);
         console.log(err.stack);
@@ -62,10 +86,7 @@
 
   function serveGetRoot (req, res, cb) {
     console.log('Query on the root');
-    res.send({
-      msg: 'Hello, welcome to our little cassandra api'
-    });
-
+    res.send({ msg: 'Hello, welcome to our little cassandra api' });
     return cb();
   }
 
@@ -105,7 +126,7 @@
       (req.params.upd || (new Date()).toISOString())
     ];
 
-    runCql(query, data)
+    runCql(query, data, req.params)
       .then(function (response) {
         console.log('Data inserted into cluster');
         res.send({ msg: 'Inserted with success' });
@@ -123,7 +144,7 @@
       req.params.id
     ];
 
-    runCql(query, data)
+    runCql(query, data, req.params)
       .then(function (response) {
         console.log('Data updated into cluster');
         res.send({ msg: 'updated with success' });
@@ -135,7 +156,7 @@
     var query = 'DELETE FROM people WHERE id = ?';
     var data = [req.params.id];
 
-    runCql(query, data)
+    runCql(query, data, req.params)
       .then(function (response) {
         console.log('Data removed from cluster');
         res.send({ msg: 'removed with success' });
